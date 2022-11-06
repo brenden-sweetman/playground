@@ -1,0 +1,45 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+# Load settings from servers.yml file.
+servers = YAML.load_file('servers.yml')
+
+...
+
+Vagrant.configure("2") do |config|
+    servers["lbs"].each do |server|
+        config.vm.define server["name"] do |srv_config|
+            srv_config.vm.box = server["box"]
+            srv_config.vm.hostname = server["name"]
+            srv_config.vm.network :private_network, ip: server["eth1"]
+            srv_config.vm.network :forwarded_port, guest: 80, host: 8080
+            srv_config.vm.provider "virtualbox" do |v|
+                v.name = server["name"]
+                v.customize ["modifyvm", :id, "--memory", server["mem"]]
+                v.customize ["modifyvm", :id, "--cpus", server["cpu"]]
+            end
+            srv_config.vm.provision "shell", path: "nginx_provision.sh"
+        end
+    end        
+            
+    servers["vault"].each do |server|
+        config.vm.define server["name"] do |srv_config|
+            srv_config.vm.box = server["box"]
+            srv_config.vm.hostname = server["name"]
+            srv_config.vm.network :private_network, ip: server["eth1"]
+            srv_config.vm.provider "virtualbox" do |v|
+                v.name = server["name"]
+                v.customize ["modifyvm", :id, "--memory", server["mem"]]
+                v.customize ["modifyvm", :id, "--cpus", server["cpu"]]
+            end
+            srv_config.vm.provision "shell", path: "vault_provision.sh"
+            srv_config.vm.provision "shell", inline: "sed -i 's/{{ IP }}/#{server["eth1"]}/g' /etc/vault.d/vault.hcl"
+            srv_config.vm.provision "shell", inline: "sed -i 's/{{ ID }}/#{server["name"]}/g' /etc/vault.d/vault.hcl"
+            srv_config.vm.provision "shell", inline: "systemctl enable vault && systemctl start vault"
+            srv_config.vm.provision "shell", inline: "echo \"export VAULT_ADDR='http://#{server["eth1"]}:8200'\" >> /home/vagrant/.bashrc"
+            srv_config.vm.provision "shell", inline: "echo \"alias vaultl='vault login -method=userpass username=test'\" >> /home/vagrant/.bashrc"
+        end
+    end
+end

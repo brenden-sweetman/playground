@@ -1,0 +1,22 @@
+lbs:
+- name: vault-lb 
+  box: debian/bullseye64
+  eth1: 192.168.56.100
+  mem: 512
+  cpu: 1
+vault:
+- name: vault0 
+  box: debian/bullseye64
+  eth1: 192.168.56.101
+  mem: 512
+  cpu: 1
+- name: vault1 
+  box: debian/bullseye64
+  eth1: 192.168.56.102
+  mem: 512
+  cpu: 1
+- name: vault2 
+  box: debian/bullseye64
+  eth1: 192.168.56.103
+  mem: 512
+  cpu: 1
