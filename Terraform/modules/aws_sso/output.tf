@@ -8,3 +8,23 @@ output "permission_sets" {
   value       = aws_ssoadmin_permission_set.default
 }
 
+output "inline_policies" {
+  value = local.inline_policies
+}
+output customer_managed_policies {
+  value = local.customer_managed_policies
+}
+output "aws_managed_policies" {
+  value = local.aws_managed_policies
+}
+output "permissions_boundaries" {
+  value = local.permissions_boundaries
+}
+
+output "customer_managed_permissions_boundaries" {
+  value = local.customer_managed_permissions_boundaries
+}
+
+output "aws_managed_permissions_boundaries" {
+  value = local.aws_managed_permissions_boundaries
+}

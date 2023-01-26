@@ -6,7 +6,7 @@ module "sso" {
       description = "Test permission_set"
       inline_policies = [
         {
-          sid       = "Allow All"
+          sid       = "AllowAll"
           effect    = "Allow"
           actions   = ["*"]
           resources = ["*"]

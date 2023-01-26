@@ -3,28 +3,28 @@ data "aws_ssoadmin_instances" "default" {}
 locals {
   inline_policies = {
     for name, config in var.permission_sets : name =>
-    lookup(config, "inline_policies", {})
+    lookup(config, "inline_policies", {}) if lookup(config, "inline_policies") != null
   }
   customer_managed_policies = {
     for name, config in var.permission_sets : name =>
-    lookup(config, "customer_managed_policies", {})
+    lookup(config, "customer_managed_policies", {}) if lookup(config, "customer_managed_policies") != null
   }
   aws_managed_policies = {
     for name, config in var.permission_sets : name =>
-    lookup(config, "aws_managed_policies", {})
+    lookup(config, "aws_managed_policies", {}) if lookup(config, "aws_managed_policies") != null
   }
   permissions_boundaries = {
     for name, config in var.permission_sets : name =>
-    lookup(config, "permissions_boundaries", {})
+    lookup(config, "permissions_boundaries", {}) if lookup(config, "permissions_boundaries") != null
   }
   customer_managed_permissions_boundaries = {
     for name, boundary in local.permissions_boundaries : name =>
-    boundary if lookup(boundary, "customer_managed_policy_reference", null) != null
+    boundary if boundary != null && lookup(boundary, "customer_managed_policy_reference", null) != null
   }
   aws_managed_permissions_boundaries = {
     for name, boundary in local.permissions_boundaries : name =>
-    boundary if lookup(boundary, "managed_policy_arn", null) != null
-  }
+    boundary if boundary != null && lookup(boundary, "managed_policy_arn", null) != null
+   }
 }
 
 # Create permission set
@@ -57,7 +57,7 @@ resource "aws_ssoadmin_permission_set_inline_policy" "default" {
 data "aws_iam_policy_document" "default" {
   for_each = { for k, v in local.inline_policies : k => v if length(v) > 0 }
   dynamic "statement" {
-    for_each = each.value
+    for_each = [ for v in coalesce(each.value, []) : v ] 
     content {
       sid           = statement.value.sid
       effect        = statement.value.effect
@@ -66,7 +66,7 @@ data "aws_iam_policy_document" "default" {
       resources     = lookup(statement.value, "resources", null)
       not_resources = lookup(statement.value, "not_resources", null)
       dynamic "condition" {
-        for_each = lookup(statement.value, "conditions", [])
+        for_each = [ for v in coalesce(statement.value.conditions, []) : v ]
         content {
           test     = lookup(condition.value, "test", null)
           variable = lookup(condition.value, "variable", null)
@@ -131,7 +131,7 @@ resource "aws_ssoadmin_permissions_boundary_attachment" "default_aws" {
     for arn in lookup(v, "managed_policy_arn") : "${k}/${arn}" => {
       arn  = arn
       name = k
-    } if length(v) > 0 }
+    } if length(v) > 0}
   ]...)
   instance_arn       = tolist(data.aws_ssoadmin_instances.default.arns)[0]
   permission_set_arn = aws_ssoadmin_permission_set.default[lookup(each.value, "name")].arn
