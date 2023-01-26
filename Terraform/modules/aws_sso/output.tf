@@ -5,6 +5,6 @@ output "identity_store_id" {
 
 output "permission_sets" {
   description = "A map of all permission sets defined in module"
-  value =  aws_ssoadmin_permission_set.default
+  value       = aws_ssoadmin_permission_set.default
 }
 
