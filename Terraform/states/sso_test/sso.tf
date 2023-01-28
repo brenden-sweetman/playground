@@ -4,7 +4,9 @@ module "sso" {
     test1 = {
       name        = "test1_all_perms"
       description = "Test permission_set"
-      inline_policies = [
+      account_ids = ["908121969653"]
+      sso_groups = ["TestGroup1"]
+      inline_policy_statements = [
         {
           sid       = "AllowAll"
           effect    = "Allow"
@@ -16,7 +18,9 @@ module "sso" {
     test2 = {
       name        = "test2_customer_managed_policies"
       description = "Test permission_set"
-      inline_policies = [
+      account_ids = ["908121969653"]
+      sso_groups = ["TestGroup1","TestGroup"]
+      inline_policy_statements = [
         {
           sid       = "AllowAll"
           effect    = "Allow"
@@ -38,23 +42,15 @@ module "sso" {
     test3 = {
       name        = "test3_aws_managed_policies"
       description = "Test permission_set"
-      inline_policies = [
+      account_ids = ["908121969653", "268166182053"]
+      sso_groups = ["TestGroup1"]
+      inline_policy_statements = [
         {
           sid       = "AllowAll"
           effect    = "Allow"
           actions   = ["*"]
           resources = ["*"]
         }
-      ]
-      customer_managed_policies = [ 
-        {
-          name = aws_iam_policy.example1.name
-          path = "/"
-        },
-        {
-          name = aws_iam_policy.example2.name
-          path = "/"
-        },
       ]
       aws_managed_policies = [
         "arn:aws:iam::aws:policy/AWSIoT1ClickReadOnlyAccess",
@@ -64,23 +60,15 @@ module "sso" {
     test4 = {
       name        = "test4_customer_managed_pb"
       description = "Test permission_set"
-      inline_policies = [
+      account_ids = ["908121969653"]
+      sso_groups = ["TestGroup1","TestGroup"]
+      inline_policy_statements = [
         {
           sid       = "AllowAll"
           effect    = "Allow"
           actions   = ["*"]
           resources = ["*"]
         }
-      ]
-      customer_managed_policies = [ 
-        {
-          name = aws_iam_policy.example1.name
-          path = "/"
-        },
-        {
-          name = aws_iam_policy.example2.name
-          path = "/"
-        },
       ]
       aws_managed_policies = [
         "arn:aws:iam::aws:policy/AWSIoT1ClickReadOnlyAccess",
@@ -94,23 +82,15 @@ module "sso" {
     test5 = {
       name        = "test5_aws_managed_pb"
       description = "Test permission_set"
-      inline_policies = [
+      account_ids = ["908121969653","268166182053","554986784076"]
+      sso_groups = ["TestGroup1","TestGroup"]
+      inline_policy_statements = [
         {
           sid       = "AllowAll"
           effect    = "Allow"
           actions   = ["*"]
           resources = ["*"]
         }
-      ]
-      customer_managed_policies = [ 
-        {
-          name = aws_iam_policy.example1.name
-          path = "/"
-        },
-        {
-          name = aws_iam_policy.example2.name
-          path = "/"
-        },
       ]
       aws_managed_policies = [
         "arn:aws:iam::aws:policy/AWSIoT1ClickReadOnlyAccess",

@@ -8,8 +8,8 @@ output "permission_sets" {
   value       = aws_ssoadmin_permission_set.default
 }
 
-output "inline_policies" {
-  value = local.inline_policies
+output "inline_policy_statements" {
+  value = local.inline_policy_statements
 }
 output customer_managed_policies {
   value = local.customer_managed_policies

@@ -1,9 +1,27 @@
 data "aws_ssoadmin_instances" "default" {}
 
+data "aws_organizations_organization" "default" {}
+
 locals {
-  inline_policies = {
+  # Create Permission Set locals
+  # organizational_units = {
+  #   for name, config in var.permission_sets : name =>
+  #   coalesce(config.ous, [])
+  # }
+  account_ids = {
     for name, config in var.permission_sets : name =>
-    coalesce(config.inline_policies, [])
+    coalesce(config.account_ids, [])
+  }
+  sso_groups = {
+    for name, config in var.permission_sets : name =>
+    coalesce(config.sso_groups, [])
+  }
+  all_sso_groups = distinct(flatten([
+    for name, sso_groups in local.sso_groups : sso_groups 
+  ]))
+  inline_policy_statements = {
+    for name, config in var.permission_sets : name =>
+    coalesce(config.inline_policy_statements, [])
   }
   customer_managed_policies = {
     for name, config in var.permission_sets : name =>
@@ -43,7 +61,7 @@ resource "aws_ssoadmin_permission_set" "default" {
 
 # Build/Attach Inline Policies:
 resource "aws_ssoadmin_permission_set_inline_policy" "default" {
-  for_each           = { for k, v in local.inline_policies : k => v if length(v) > 0 }
+  for_each           = { for k, v in local.inline_policy_statements : k => v if length(v) > 0 }
   inline_policy      = data.aws_iam_policy_document.default[each.key].json
   instance_arn       = tolist(data.aws_ssoadmin_instances.default.arns)[0]
   permission_set_arn = aws_ssoadmin_permission_set.default[each.key].arn
@@ -51,7 +69,7 @@ resource "aws_ssoadmin_permission_set_inline_policy" "default" {
 }
 
 data "aws_iam_policy_document" "default" {
-  for_each = { for k, v in local.inline_policies : k => v if length(v) > 0 }
+  for_each = { for k, v in local.inline_policy_statements : k => v if length(v) > 0 }
   dynamic "statement" {
     for_each = [ for v in coalesce(each.value, []) : v ] 
     content {
@@ -125,13 +143,35 @@ resource "aws_ssoadmin_permissions_boundary_attachment" "default_aws" {
   }
 }
 
-#data "aws_organizations_organizational_unit" "default" {
-#    for_each = var.ou_to_group_mapping
-#
-#}
+
+# Get SSO groups for each permission set
+data "aws_identitystore_group" "default" {
+  for_each = toset([ for sso_group in local.all_sso_groups: sso_group if sso_group != null ])
+  identity_store_id       = tolist(data.aws_ssoadmin_instances.default.identity_store_ids)[0] 
+  alternate_identifier {
+    unique_attribute {
+      attribute_path = "DisplayName"
+      attribute_value = each.key
+    }
+  }
+}
 
 
-# Attach permission set to account
-#resource "aws_ssoadmin_account_assignment" "default" {
-#    for each 
-#}
+# Attach permission set to accounts
+resource "aws_ssoadmin_account_assignment" "default" {
+  for_each = merge([for k, v in local.account_ids : merge([
+    for account_id in v : {
+      for sso_group in local.sso_groups[k] : "${k}/${account_id}/${sso_group}" => {
+        name = k
+        account_id = account_id
+        sso_group= sso_group 
+      } if length(local.sso_groups) > 0 
+    }]...)
+  ]...)
+  instance_arn       = tolist(data.aws_ssoadmin_instances.default.arns)[0]
+  permission_set_arn = aws_ssoadmin_permission_set.default[each.value.name].arn 
+  principal_id = data.aws_identitystore_group.default[each.value.sso_group].group_id
+  principal_type = "GROUP"
+  target_id = each.value.account_id
+  target_type = "AWS_ACCOUNT"
+}

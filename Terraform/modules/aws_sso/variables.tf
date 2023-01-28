@@ -5,7 +5,10 @@ variable "permission_sets" {
     description      = optional(string)
     relay_state      = optional(string)
     session_duration = optional(string)
-    inline_policies = optional(list(object({
+    # ous = optional(list(string))
+    account_ids = optional(list(string))
+    sso_groups = optional(list(string))
+    inline_policy_statements = optional(list(object({
       sid           = string
       effect        = string
       actions       = optional(list(string))
