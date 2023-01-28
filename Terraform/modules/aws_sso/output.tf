@@ -17,14 +17,11 @@ output customer_managed_policies {
 output "aws_managed_policies" {
   value = local.aws_managed_policies
 }
-output "permissions_boundaries" {
-  value = local.permissions_boundaries
+
+output "customer_managed_permissions_boundary" {
+  value = local.customer_managed_permissions_boundary
 }
 
-output "customer_managed_permissions_boundaries" {
-  value = local.customer_managed_permissions_boundaries
-}
-
-output "aws_managed_permissions_boundaries" {
-  value = local.aws_managed_permissions_boundaries
+output "aws_managed_permissions_boundary" {
+  value = local.aws_managed_permissions_boundary
 }

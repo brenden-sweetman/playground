@@ -23,13 +23,11 @@ variable "permission_sets" {
       path = optional(string)
     })))
     aws_managed_policies = optional(list(string))
-    permissions_boundaries = optional(list(object({
-      managed_policy_arn = optional(string)
-      customer_managed_policy_reference = optional(object({
+    customer_managed_permissions_boundary = optional(object({
         name = string
         path = string
-      }))
-    })))
+    }))
+    aws_managed_permissions_boundary = optional(string)
   }))
   default = {}
 }
