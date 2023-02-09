@@ -1,11 +1,13 @@
 variable "permission_sets" {
   description = "A complex map with permissions and statements for SSO permission_sets"
+  # Optional types below pass a null value if the attribute is missing in the module call.
+  # The module takes advantage of the coalesce() function as empty lists/maps are generally
+  # preferred when using for_each
   type = map(object({
     name             = optional(string)
     description      = optional(string)
     relay_state      = optional(string)
     session_duration = optional(string)
-    # ous = optional(list(string))
     account_ids = optional(list(string))
     sso_groups = optional(list(string))
     inline_policy_statements = optional(list(object({
@@ -32,17 +34,13 @@ variable "permission_sets" {
     }))
     aws_managed_permissions_boundary = optional(string)
   }))
+  validation {
+    condition = var.customer_managed_permissions_boundary != null && var.aws_managed_permissions_boundary != null
+    error_message = "Only one permissions boundary can be specified. You specified both a aws_managed_permissions_boundary and a customer_managed_permissions_boundary choose 1."
+  }
   default = {}
 }
 
-variable "ou_to_group_mapping" {
-  description = "A map of organization OUs to IDP groups and the connecting permission set"
-  type = map(list(object({
-    idp_group           = string
-    permission_set_name = string
-  })))
-  default = {}
-}
 
 variable "tags" {
   description = "A map of tags to associate with all resources"
